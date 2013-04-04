@@ -61,20 +61,20 @@ int main(int argc, char** argv) {
     if (output_magic)
         printf("%c%c", 0xff, 0xff); 
 
-    /* Allocate the variables for the vbi_capture_read call */
-    char* raw = malloc(buffsize);
-    vbi_sliced* sliced = malloc(sizeof(vbi_sliced) * nrows);
-    int rlines;
-    double timestamp;
+    /* Allocate the variables for the vbi_capture_pull call */
+    vbi_capture_buffer* buffer_ptr;
     struct timeval timeout;
+    vbi_sliced* row_ptr;
     int i;
     
     while (1) {
-        vbi_capture_read(cap, raw, sliced, &rlines, &timestamp, &timeout);
-        for (i = 0; i < rlines; i++) {
-            if (sliced[i].line == line) {
-                printf("%c%c", sliced[i].data[0] & parity_mask,
-                               sliced[i].data[1] & parity_mask);
+        vbi_capture_pull_sliced(cap, &buffer_ptr, &timeout);
+        for (i = 0; i*sizeof(vbi_sliced) < buffer_ptr->size; i++) {
+            row_ptr = ((vbi_sliced*) buffer_ptr->data) + i;
+            if (row_ptr->line == line) {
+                printf("%c%c", 
+                       row_ptr->data[0] & parity_mask,
+                       row_ptr->data[1] & parity_mask);
                 fflush(stdout);
             }
         }
