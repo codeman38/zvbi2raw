@@ -18,9 +18,10 @@ int main(int argc, char** argv) {
     char* device = "/dev/vbi0";
     char parity_mask = 0xff;
     char output_magic = 0;
+    FILE* outfile = stdout;
     
     char c;
-    while ((c = getopt(argc, argv, "d:l:ms")) != -1) {
+    while ((c = getopt(argc, argv, "d:l:mo:s")) != -1) {
         switch (c) {
             case 'l':
                 line = atoi(optarg);
@@ -33,6 +34,9 @@ int main(int argc, char** argv) {
                 break;
             case 'm':
                 output_magic = 1;
+                break;
+            case 'o':
+                outfile = fopen(optarg, "wb");
                 break;
             default:
                 print_help();
@@ -72,10 +76,10 @@ int main(int argc, char** argv) {
         for (i = 0; i*sizeof(vbi_sliced) < buffer_ptr->size; i++) {
             row_ptr = ((vbi_sliced*) buffer_ptr->data) + i;
             if (row_ptr->line == line) {
-                printf("%c%c", 
-                       row_ptr->data[0] & parity_mask,
-                       row_ptr->data[1] & parity_mask);
-                fflush(stdout);
+                fprintf(outfile, "%c%c", 
+                        row_ptr->data[0] & parity_mask,
+                        row_ptr->data[1] & parity_mask);
+                fflush(outfile);
             }
         }
     }
@@ -84,9 +88,10 @@ int main(int argc, char** argv) {
 void print_help() {
     printf("zvbi2raw - outputs raw VBI data to stdout using libzvbi\n");
     printf("Options:\n");
-    printf("  -l <line>   : Use line <line> of VBI (default: 21)\n");
-    printf("  -d <device> : Use <device> as input device (default: /dev/vbi0)\n");
-    printf("  -s          : Strip parity bit from output\n");
-    printf("  -m          : Output 0xFFFF magic number at beginning of file\n");
-    printf("                  (needed for McPoodle's conversion tools)\n");
+    printf("  -o <outfile> : Use file <outfile> for output (default: stdout)\n");
+    printf("  -l <line>    : Use line <line> of VBI (default: 21)\n");
+    printf("  -d <device>  : Use <device> as input device (default: /dev/vbi0)\n");
+    printf("  -s           : Strip parity bit from output\n");
+    printf("  -m           : Output 0xFFFF magic number at beginning of file\n");
+    printf("                   (needed for McPoodle's conversion tools)\n");
 }
