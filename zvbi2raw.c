@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     
     /* Output the magic number, if we're going to do that */
     if (output_magic)
-        printf("%c%c", 0xff, 0xff); 
+        printf("%c%c%c%c", 0xff, 0xff, 0xff, 0xff); 
 
     /* Allocate the variables for the vbi_capture_pull call */
     vbi_capture_buffer* buffer_ptr;
@@ -92,6 +92,6 @@ void print_help() {
     printf("  -l <line>    : Use line <line> of VBI (default: 21)\n");
     printf("  -d <device>  : Use <device> as input device (default: /dev/vbi0)\n");
     printf("  -s           : Strip parity bit from output\n");
-    printf("  -m           : Output 0xFFFF magic number at beginning of file\n");
+    printf("  -m           : Output 0xFFFFFFFF magic number at beginning of file\n");
     printf("                   (needed for McPoodle's conversion tools)\n");
 }

@@ -16,7 +16,7 @@ However, the following options are available:
 * **-d**: Specify a different input device to use.
 * **-s**: Strip off the parity bit of each byte in the output; this makes
     the output somewhat more human-readable.
-* **-m**: Include a 'magic number' of 0xFFFF at the beginning of the file.
+* **-m**: Include a 'magic number' of 0xFFFFFFFF at the beginning of the file.
     This makes the output file compatible with McPoodle's
     [SCC Tools](http://www.theneitherworld.com/mcpoodle/SCC_TOOLS/DOCS/SCC_TOOLS.HTML).
 
