@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <errno.h>
 #include "libzvbi.h"
 
 /**
@@ -19,9 +20,10 @@ int main(int argc, char** argv) {
     char parity_mask = 0xff;
     char output_magic = 0;
     FILE* outfile = stdout;
+    int verbose = 0;
     
     int c;
-    while ((c = getopt(argc, argv, "d:l:mo:s")) != -1) {
+    while ((c = getopt(argc, argv, "d:l:mo:sv")) != -1) {
         switch (c) {
             case 'l':
                 line = atoi(optarg);
@@ -38,6 +40,9 @@ int main(int argc, char** argv) {
             case 'o':
                 outfile = fopen(optarg, "wb");
                 break;
+            case 'v':
+                verbose = 1;
+                break;
             default:
                 print_help();
                 return;
@@ -50,7 +55,7 @@ int main(int argc, char** argv) {
     char* errstr;
     unsigned int service = VBI_SLICED_CAPTION_525;
     vbi_capture* cap =
-        vbi_capture_v4l2_new(device, 5, &service, 1, &errstr, 0);
+        vbi_capture_v4l2_new(device, 5, &service, 1, &errstr, verbose);
     if (cap == NULL) {
         fprintf(stderr, "Device cannot be opened!\n");
         return 2;
@@ -70,16 +75,26 @@ int main(int argc, char** argv) {
     struct timeval timeout;
     vbi_sliced* row_ptr;
     int i;
+    int rval;
+    /* Initialize the frame timeout to 2 seconds. */
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
     
     while (1) {
-        vbi_capture_pull_sliced(cap, &buffer_ptr, &timeout);
-        for (i = 0; i*sizeof(vbi_sliced) < buffer_ptr->size; i++) {
-            row_ptr = ((vbi_sliced*) buffer_ptr->data) + i;
-            if (row_ptr->line == line) {
-                fprintf(outfile, "%c%c", 
-                        row_ptr->data[0] & parity_mask,
-                        row_ptr->data[1] & parity_mask);
-                fflush(outfile);
+        rval = vbi_capture_pull_sliced(cap, &buffer_ptr, &timeout);
+        if (rval < 0) {
+            fprintf(stderr, "Read error %d\n", errno);
+        } else if (rval == 0) {
+            fprintf(stderr, "Time out\n");
+        } else {
+            for (i = 0; i*sizeof(vbi_sliced) < buffer_ptr->size; i++) {
+                row_ptr = ((vbi_sliced*) buffer_ptr->data) + i;
+                if (row_ptr->line == line) {
+                    fprintf(outfile, "%c%c", 
+                            row_ptr->data[0] & parity_mask,
+                            row_ptr->data[1] & parity_mask);
+                    fflush(outfile);
+                }
             }
         }
     }
@@ -94,4 +109,5 @@ void print_help() {
     printf("  -s           : Strip parity bit from output\n");
     printf("  -m           : Output 0xFFFFFFFF magic number at beginning of file\n");
     printf("                   (needed for McPoodle's conversion tools)\n");
+    printf("  -v           : Verbose output from libzvbi\n");
 }
