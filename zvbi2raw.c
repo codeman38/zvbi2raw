@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     char output_magic = 0;
     FILE* outfile = stdout;
     
-    char c;
+    int c;
     while ((c = getopt(argc, argv, "d:l:mo:s")) != -1) {
         switch (c) {
             case 'l':
