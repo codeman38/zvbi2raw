@@ -61,11 +61,6 @@ int main(int argc, char** argv) {
         return 2;
     }
     
-    /* Get the vbi_raw_decoder parameters */
-    vbi_raw_decoder* dec = vbi_capture_parameters(cap);
-    int nrows = dec->count[0] + dec->count[1];
-    int buffsize = nrows * dec->bytes_per_line;
-    
     /* Output the magic number, if we're going to do that */
     if (output_magic)
         printf("%c%c%c%c", 0xff, 0xff, 0xff, 0xff); 
